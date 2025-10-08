@@ -1,18 +1,8 @@
 terraform {
-  required_version = ">= 1.5.0"
-
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
+    bucket         = "my-terraform-backend-bucket"  # <-- REPLACE this with your S3 bucket
+    key            = "aws-cicd-ecs-project/terraform.tfstate"
+    region         = var.region
+    dynamodb_table = "terraform-locks"               # create this table if you want locking
   }
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.region
 }

@@ -2,10 +2,14 @@ output "vpc_id" {
   value = aws_vpc.this.id
 }
 
-output "subnet_ids" {
-  value = aws_subnet.public[*].id
+output "public_subnets" {
+  value = [for s in aws_subnet.public : s.id]
 }
 
-output "security_group_id" {
-  value = aws_security_group.app_sg.id
+output "private_subnets" {
+  value = [for s in aws_subnet.private : s.id]
+}
+
+output "ecs_security_group_id" {
+  value = aws_security_group.ecs_tasks.id
 }

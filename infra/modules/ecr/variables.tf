@@ -1,3 +1,4 @@
 variable "repo_name" {
-  type = string
+  type    = string
+  default = "ecs-app-repo"
 }

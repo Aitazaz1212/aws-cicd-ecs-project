@@ -1,0 +1,49 @@
+name: CI/CD ECS Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::074272433822:role/GitHubOIDC-ECS-Deploy
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag, Push image
+        run: |
+          IMAGE_REPO_NAME=ecs-app-repo
+          IMAGE_TAG=latest
+          docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG ./app
+          docker tag $IMAGE_REPO_NAME:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$IMAGE_REPO_NAME:$IMAGE_TAG
+          docker push ${{ steps.login-ecr.outputs.registry }}/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+      - name: Deploy to Amazon ECS
+        run: |
+          CLUSTER_NAME=ecs-app-cluster
+          SERVICE_NAME=ecs-app-service
+
+          echo "Cluster: $CLUSTER_NAME"
+          echo "Service: $SERVICE_NAME"
+
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --force-new-deployment
